@@ -170,12 +170,22 @@ Controllers depend only on `TaskRepositoryInterface`. `RepositoryServiceProvider
 | SQL injection        | All queries go through Eloquent and the query builder, which use PDO prepared statements. |
 | Password storage     | Passwords are hashed with bcrypt (`hashed` cast / `Hash`). |
 | Backend validation   | Form Requests check required fields, lengths, enum values and real calendar dates. |
-| Session handling     | The session ID is regenerated on login, and the session is invalidated and the token regenerated on logout. Cookies are `HttpOnly` and `SameSite=Lax`. |
+| Session handling     | The session ID is regenerated on login, and the session is invalidated and the token regenerated on logout. Session data is stored encrypted (`SESSION_ENCRYPT=true`). Cookies are `HttpOnly` and `SameSite=Lax`. An expired session sends the dashboard back to the login page. |
 | Brute force          | Login is limited to 5 attempts per email and IP address. |
 | CSRF                 | Every POST/PUT/DELETE requires the token, sent in the form or in the `X-CSRF-TOKEN` header for `fetch`. |
 | Authorization        | Queries are scoped to the logged-in user. `TaskPolicy` blocks access to other users' tasks and returns 404, so it does not reveal that they exist. `user_id` cannot be mass-assigned. |
 | XSS                  | Blade `{{ }}` escapes all output. JS writes user data only with `textContent`, never `innerHTML`. A CSP header is sent when `APP_DEBUG=false`. |
 | Other headers        | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`. |
+
+Each row is covered by `tests/Feature/SecurityTest.php` (SQL injection attempts, password hashing, validation, session lifecycle, cross-user access, HTML escaping and CSP).
+
+**Before deploying to a real server**, set these in `.env`:
+
+```dotenv
+APP_ENV=production
+APP_DEBUG=false            # hides stack traces and turns on the CSP header
+SESSION_SECURE_COOKIE=true # only send the session cookie over HTTPS
+```
 
 ---
 
